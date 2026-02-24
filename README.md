@@ -17,7 +17,7 @@ Sandbox API Repository to describe, develop, document, and test the VoiceVerific
 
 * Service API(s) “VoiceVerificationCode” (see APIBacklog.md) 
 * The API(s) provide(s) the API consumer with the ability to:  
-  * §Short API scope description§ !! ⚠️ Add here a scope description according to the API proposal
+  * This capability can provide users with voice verification code services, mainly applied in scenarios such as login and payment
 * Describe, develop, document, and test the API(s)
 * Started: June 2025
 <!-- * Incubating stage since: {{incubation date}} --> 

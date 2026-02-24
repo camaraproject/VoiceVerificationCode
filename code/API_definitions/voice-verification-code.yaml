@@ -1,0 +1,706 @@
+openapi: 3.0.3
+info:
+  title: voiceVerifyCode
+  description: |
+    This API enables API consumers to initiate calls to users by invoking the interface. When the user answers the call, the specified verification code content will be played.
+
+    # Introduction
+
+    This document describes the call service APIs provided by the voice notification service to third-party platforms, intended for reference by product managers, developers, and testers. The APIs are initiated by the third-party platform to the capability platform using POST requests, with messages formatted in JSON and encoded in UTF-8.
+    This voice verification code interface supports configurations including Caller ID display number, Billing extension, TTS (Text-to-Speech) voice, TTS preprocessing, Digit collection, Event notifications, Call-associated data, Call recording.
+
+    # API functionality
+
+    The API provides the following functionality:
+    - Allows modification of playback count, enabling control over how many times the voice message is played after the user answers the call.
+    - Supports call recording options, including no recording and recording after call connection.
+    - Supports TTS (Text-to-Speech) notification voice with adjustable parameters including voice characteristics, volume, pitch, speech rate, and includes TTS preprocessing functionality.
+    - Supports digit collection with comprehensive configuration options for digit collection parameters.
+
+    # Request Parameters Definition:
+    * **clientId**: Client request ID, which allows empty strings.
+    * **vccId**: Enterprise VCCID.
+    * **method**: Request method, set to "call".
+    * **chargeExt**: Billing extension number, provided by the platform when the service is activated.
+    * **number**: Destination numbers for outbound calls.
+    * **displayNumber**: Caller ID number; if left empty, the platform's default configuration will be used.
+    * **code**: Verification Code Content.
+    * **repeat**: Playback count, default is 1.
+    * **callData**: Call-associated data (maximum 255 bytes, single quotes ' are not supported).
+    * **callBackUrl**: Event notification URL; if not specified, the enterprise's default callback URL will be used. If no default callback is configured, no event notifications will be sent.
+    * **recordType**: Recording flag, default is 0: 0: No recording 1: Record after the call is connected
+    * **speaker**: Voice timbre for notifications.
+    * **volume**: Voice volume for notifications.
+    * **speed**: Speech rate for notifications.
+    * **pitch**: Voice tone for notifications.
+    * **presynth**: TTS preprocessing.
+    * **collectParam**: Digit collection parameters.
+    * **collectAction**: Definition of subsequent operations after digit collection.
+
+    # Authorization and authentication
+
+    The "Camara Security and Interoperability Profile" provides details of how an API consumer requests an access token. Please refer to Identity and Consent Management (https://github.com/camaraproject/IdentityAndConsentManagement/) for the released version of the profile.
+
+    The specific authorization flows to be used will be agreed upon during the onboarding process, happening between the API consumer and the API provider, taking into account the declared purpose for accessing the API, whilst also being subject to the prevailing legal framework dictated by local legislation.
+
+    In cases where personal data is processed by the API and users can exercise their rights through mechanisms such as opt-in and/or opt-out, the use of three-legged access tokens is mandatory. This ensures that the API remains in compliance with privacy regulations, upholding the principles of transparency and user-centric privacy-by-design.
+
+    # Additional CAMARA error responses
+
+    The list of error codes in this API specification is not exhaustive. Therefore the API specification may not document some non-mandatory error statuses as indicated in `CAMARA API Design Guide`.
+
+    Please refer to the `CAMARA_common.yaml` of the Commonalities Release associated to this API version for a complete list of error responses. The applicable Commonalities Release can be identified in the `API Readiness Checklist` document associated to this API version.
+
+    As a specific rule, error `501 - NOT_IMPLEMENTED` can be only a possible error response if it is explicitly documented in the API.
+
+  version: 0.1.0
+  x-camara-commonalities: 0.6
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+externalDocs:
+  description: Project documentation at CAMARA
+  url: https://github.com/camaraproject/VoiceVerificationCode
+servers:
+  - url: "{apiRoot}/cincc/apicall/{vccid}/voicecode"
+    variables:
+      apiRoot:
+        default: http://localhost:14900
+        description: API root, defined by the service provider, e.g. `api.example.com` or `api.example.com/somepath`
+      vccid:
+        default: "666666"
+        description: The VCC id used in server URL
+tags:
+  - name: Voice Verification Code Outbound Request
+    description: Voice Verification Code Outbound Request
+paths:
+  /sessions:
+    post:
+      tags:
+        - Voice Verification Code Outbound Request
+      summary: Creates a new session
+      description: |
+        Create a new session to Voice Verification Code Outbound Request.
+
+        NOTES:
+        - If network resources are unavailable, there is an error obtaining the server IP and port, or the request body is not in JSON format, the API consumer will receive an error response with a corresponding code `400 - INVALID_ARGUMENT`.
+        - If the interface request is successful, the API consumer will receive a response containing a code and a session ID. `201 - Created` and a session ID.
+      operationId: reqInfo
+      security:
+        - openId:
+            - voice-verification-code:sessions:create
+      requestBody:
+        description: Parameters to create a new session
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/reqInfo"
+            examples:
+              VOICEVERIFY_POST:
+                $ref: "#/components/examples/VOICEVERIFY_POST"
+        required: true
+      responses:
+        "201":
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/resultInfo_201"
+              examples:
+                RESPONSE_VOICEVERIFY:
+                  $ref: "#/components/examples/RESPONSE_VOICEVERIFY"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/resultInfo_400"
+              examples:
+                GENERIC_400_INVALID_ARGUMENT:
+                  $ref: "#/components/examples/GENERIC_400_INVALID_ARGUMENT"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/resultInfo_401"
+              examples:
+                GENERIC_401_UNAUTHENTICATED:
+                  $ref: "#/components/examples/GENERIC_401_UNAUTHENTICATED"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/resultInfo_403"
+              examples:
+                GENERIC_403_PERMISSION_DENIED:
+                  $ref: "#/components/examples/GENERIC_403_PERMISSION_DENIED"
+
+components:
+  securitySchemes:
+    openId:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+
+  schemas:
+    clientId:
+      description: Client request ID, which allows empty strings.
+      type: string
+      example: "112233"
+    vccId:
+      description: Enterprise VCCID.
+      type: string
+      pattern: ^[+0-9]{6}$
+      example: "000011"
+    method:
+      description: Request method, set to "call".
+      type: string
+      example: "call"
+    chargeExt:
+      description: Billing extension number, provided by the platform when the service is activated.
+      type: string
+      example: "1001"
+    number:
+      description: Destination numbers for outbound calls.
+      type: string
+      example: "18810411211"
+    displayNumber:
+      description: Caller ID number; if left empty, the platform's default configuration will be used.
+      type: string
+      example: "82799605"
+    code:
+      description: Verification Code Content.
+      type: string
+      example: "123456"
+    repeat:
+      description: Playback count, default is 1.
+      type: string
+      example: "2"
+    callData:
+      description: Call-associated data (maximum 255 bytes, single quotes ' are not supported).
+      type: string
+      example: "VoiceVerificationCode"
+    callBackUrl:
+      description: Event notification URL; if not specified, the enterprise's default callback URL will be used.
+      type: string
+      example: "http://10.168.1.30:28089/kt-module-task/kt-module-task/voice/callback"
+    recordType:
+      description: Recording flag, default is 0, 0 is No recording 1 is Record after the call is connected
+      type: string
+      example: "0"
+    speaker:
+      description: Voice timbre for notifications.
+      type: string
+      example: "0"
+    volume:
+      description: Voice volume for notifications.
+      type: string
+      example: "0"
+    speed:
+      description: Speech rate for notifications.
+      type: string
+      example: "0"
+    pitch:
+      description: Voice tone for notifications.
+      type: string
+      example: "0"
+    presynth:
+      description: TTS preprocessing.
+      type: string
+      example: "0"
+    collectParam:
+      description: Digit collection parameters.
+      type: object
+      properties:
+        active:
+          type: string
+          description: Digit Collection Control, 0 is Disabled, 1 is Enabled (Default 0)
+        ini:
+          type: string
+          description: Keypress Interruption, 0 is Not Allowed, 1 is Allowed (Default 0)
+        fto:
+          type: string
+          description: First Digit Timeout, 0-300 seconds (Default 10)
+        ito:
+          type: string
+          description: Inter-digit Timeout, 1-300 seconds (Default 5)
+        min:
+          type: string
+          description: Minimum Digit Length, Default 1
+        max:
+          type: string
+          description: Maximum Digit Length, Default 16
+        end:
+          type: string
+          description: Terminator Digit, 0-9|*|# (Default # )
+        cel:
+          type: string
+          description: Cancel Digit, 0-9|*|# (Default *)
+      required:
+        - active
+        - ini
+        - fto
+        - ito
+        - min
+        - max
+        - end
+        - cel
+    collectAction:
+      description: Definition of subsequent operations after digit collection.
+      type: object
+      properties:
+        errCnt:
+          type: string
+          description: Maximum Allowed Keypress Errors, When not reached, re-initiate digit collection
+        errContinue:
+          type: string
+          description: Keypress Error Retry Prompt, Audio prompt played when re-collecting digits after keypress errors
+        errEnd:
+          type: string
+          description: Keypress Error Termination Prompt, Audio prompt played when terminating due to keypress errors
+        keyN:
+          type: string
+          description: Key N Prompt, Audio prompt played for key N (0-9, e.g., key0, key1, key2), after which the call ends. Unspecified keys will be treated as keypress errors
+        opN:
+          type: string
+          description: Key N Action, Action for key N (0-9/Null, e.g., op0, op1, opNull). opNull defines the action for no keypress. Default 0
+      required:
+        - errCnt
+        - errContinue
+        - errEnd
+        - keyN
+        - opN
+    sid:
+      description: Session identifier generated by the server.
+      type: string
+      example: "S20210316093614941989AC11000C02386591"
+    callId:
+      description: Call identifier.
+      type: string
+      example: "C20210316093614AC11000C02386588"
+    seq:
+      description: Message sequence number.
+      type: string
+      example: "1"
+    result:
+      description: Request result code.
+      type: string
+      enum:
+        - "1000"
+        - "1001"
+        - "1002"
+        - "1003"
+        - "1004"
+        - "1005"
+        - "1006"
+        - "1007"
+        - "1008"
+        - "1009"
+        - "1010"
+        - "1011"
+        - "1012"
+        - "1013"
+        - "1100"
+        - "1101"
+        - "1102"
+        - "1999"
+    result_201:
+      description: success code.
+      type: string
+      enum:
+        - "0000"
+    result_400:
+      description: Bad Request code.
+      type: string
+      enum:
+        - "1000"
+        - "1001"
+        - "1002"
+        - "1003"
+        - "1004"
+        - "1005"
+        - "1006"
+        - "1012"
+        - "1013"
+        - "1100"
+        - "1998"
+        - "1999"
+    result_401:
+      description: Unauthorized code.
+      type: string
+      enum:
+        - "1009"
+        - "1010"
+        - "1011"
+    result_403:
+      description: Forbidden code.
+      type: string
+      enum:
+        - "1007"
+        - "1008"
+        - "1011"
+        - "1101"
+        - "1102"
+
+    reqInfo:
+      description: Session related information.
+      allOf:
+        - $ref: "#/components/schemas/reqParameter"
+
+    reqParameter:
+      description: Attributes required to create a session
+      type: object
+      properties:
+        clientId:
+          description: |
+            Client request ID carried in the request.
+          allOf:
+            - $ref: "#/components/schemas/clientId"
+        vccId:
+          description: |
+            Enterprise VCCID
+          allOf:
+            - $ref: "#/components/schemas/vccId"
+        method:
+          description: |
+            Request method, set to "call".
+          allOf:
+            - $ref: "#/components/schemas/method"
+        chargeExt:
+          description: |
+            Billing extension number, provided by the platform when the service is activated.
+          allOf:
+            - $ref: "#/components/schemas/chargeExt"
+        number:
+          description: |
+            Destination numbers for outbound calls,
+          allOf:
+            - $ref: "#/components/schemas/number"
+        displayNumber:
+          description: |
+            Caller ID number
+          allOf:
+            - $ref: "#/components/schemas/displayNumber"
+        code:
+          description: |
+            Verification Code Content.
+          allOf:
+            - $ref: "#/components/schemas/code"
+        repeat:
+          description: |
+            Playback count
+          allOf:
+            - $ref: "#/components/schemas/repeat"
+        callData:
+          description: |
+            Call-associated data
+          allOf:
+            - $ref: "#/components/schemas/callData"
+        callBackUrl:
+          description: |
+            Event notification URL
+          allOf:
+            - $ref: "#/components/schemas/callBackUrl"
+        recordType:
+          description: |
+            Recording flag
+          allOf:
+            - $ref: "#/components/schemas/recordType"
+        speaker:
+          description: |
+            Voice timbre for notifications.
+          allOf:
+            - $ref: "#/components/schemas/speaker"
+        volume:
+          description: |
+            Voice volume for notifications.
+          allOf:
+            - $ref: "#/components/schemas/volume"
+        speed:
+          description: |
+            Speech rate for notifications.
+          allOf:
+            - $ref: "#/components/schemas/speed"
+        pitch:
+          description: |
+            Voice tone for notifications.
+          allOf:
+            - $ref: "#/components/schemas/pitch"
+        presynth:
+          description: |
+            TTS preprocessing.
+          allOf:
+            - $ref: "#/components/schemas/presynth"
+        collectParam:
+          description: |
+            Digit collection parameters.
+          allOf:
+            - $ref: "#/components/schemas/collectParam"
+        collectAction:
+          description: |
+            Definition of subsequent operations after digit collection.
+          allOf:
+            - $ref: "#/components/schemas/collectAction"
+      required:
+        - vccId
+        - method
+        - chargeExt
+        - number
+        - code
+
+    resultInfo_201:
+      description: Information related to the end of the conversation.
+      allOf:
+        - $ref: "#/components/schemas/resultParameter_201"
+    resultInfo_400:
+      description: Information related to the end of the conversation.
+      allOf:
+        - $ref: "#/components/schemas/resultParameter_400"
+    resultInfo_401:
+      description: Information related to the end of the conversation.
+      allOf:
+        - $ref: "#/components/schemas/resultParameter_401"
+    resultInfo_403:
+      description: Information related to the end of the conversation.
+      allOf:
+        - $ref: "#/components/schemas/resultParameter_403"
+
+    resultParameter_201:
+      description: The attribute returned at the end of the session
+      type: object
+      properties:
+        clientId:
+          description: |
+            Client request ID carried in the request.
+          allOf:
+            - $ref: "#/components/schemas/clientId"
+        sid:
+          description: |
+            Session identifier generated by the server
+          allOf:
+            - $ref: "#/components/schemas/sid"
+        vccId:
+          description: |
+            Enterprise VCCID
+          allOf:
+            - $ref: "#/components/schemas/vccId"
+        callId:
+          description: |
+            Call identifier
+          allOf:
+            - $ref: "#/components/schemas/callId"
+        seq:
+          description: |
+            Message sequence number
+          allOf:
+            - $ref: "#/components/schemas/seq"
+        method:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/method"
+        chargeExt:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/chargeExt"
+        result:
+          description: |
+            Request result code
+          allOf:
+            - $ref: "#/components/schemas/result_201"
+      required:
+        - clientId
+        - vccId
+        - seq
+        - method
+        - chargeExt
+        - result
+    resultParameter_400:
+      description: The attribute returned at the end of the session
+      type: object
+      properties:
+        clientId:
+          description: |
+            Client request ID carried in the request.
+          allOf:
+            - $ref: "#/components/schemas/clientId"
+        sid:
+          description: |
+            Session identifier generated by the server
+          allOf:
+            - $ref: "#/components/schemas/sid"
+        vccId:
+          description: |
+            Enterprise VCCID
+          allOf:
+            - $ref: "#/components/schemas/vccId"
+        callId:
+          description: |
+            Call identifier
+          allOf:
+            - $ref: "#/components/schemas/callId"
+        seq:
+          description: |
+            Message sequence number
+          allOf:
+            - $ref: "#/components/schemas/seq"
+        method:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/method"
+        chargeExt:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/chargeExt"
+        result:
+          description: |
+            Request result code
+          allOf:
+            - $ref: "#/components/schemas/result_400"
+      required:
+        - status
+        - code
+        - message
+    resultParameter_401:
+      description: The attribute returned at the end of the session
+      type: object
+      properties:
+        clientId:
+          description: |
+            Client request ID carried in the request.
+          allOf:
+            - $ref: "#/components/schemas/clientId"
+        sid:
+          description: |
+            Session identifier generated by the server
+          allOf:
+            - $ref: "#/components/schemas/sid"
+        vccId:
+          description: |
+            Enterprise VCCID
+          allOf:
+            - $ref: "#/components/schemas/vccId"
+        callId:
+          description: |
+            Call identifier
+          allOf:
+            - $ref: "#/components/schemas/callId"
+        seq:
+          description: |
+            Message sequence number
+          allOf:
+            - $ref: "#/components/schemas/seq"
+        method:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/method"
+        chargeExt:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/chargeExt"
+        result:
+          description: |
+            Request result code
+          allOf:
+            - $ref: "#/components/schemas/result_401"
+      required:
+        - status
+        - code
+        - message
+    resultParameter_403:
+      description: The attribute returned at the end of the session
+      type: object
+      properties:
+        clientId:
+          description: |
+            Client request ID carried in the request.
+          allOf:
+            - $ref: "#/components/schemas/clientId"
+        sid:
+          description: |
+            Session identifier generated by the server
+          allOf:
+            - $ref: "#/components/schemas/sid"
+        vccId:
+          description: |
+            Enterprise VCCID
+          allOf:
+            - $ref: "#/components/schemas/vccId"
+        callId:
+          description: |
+            Call identifier
+          allOf:
+            - $ref: "#/components/schemas/callId"
+        seq:
+          description: |
+            Message sequence number
+          allOf:
+            - $ref: "#/components/schemas/seq"
+        method:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/method"
+        chargeExt:
+          description: |
+            Request method
+          allOf:
+            - $ref: "#/components/schemas/chargeExt"
+        result:
+          description: |
+            Request result code
+          allOf:
+            - $ref: "#/components/schemas/result_403"
+      required:
+        - status
+        - code
+        - message
+  responses:
+    Generic400:
+      description: Bad Request
+    Generic401:
+      description: Unauthorized
+    Generic403:
+      description: Forbidden
+  examples:
+    VOICEVERIFY_POST:
+      value:
+        vccId: "666666"
+        method: "call"
+        chargeExt: "1001"
+        number: "13800138001"
+        code: "1234"
+    RESPONSE_VOICEVERIFY:
+      value:
+        clientId: ""
+        sid: "S20210316093614941989AC11000C02386591"
+        vccId: "666666"
+        chargeExt: "1001"
+        callId: "C20210316093614AC11000C02386588"
+        seq: "1"
+        method: "call"
+        result: "0000"
+    GENERIC_400_INVALID_ARGUMENT:
+      description: Invalid Argument. Generic Syntax Exception
+      value:
+        status: 400
+        code: INVALID_ARGUMENT
+        message: Client specified an invalid argument,request body or query param.
+    GENERIC_401_UNAUTHENTICATED:
+      description: Request cannot be authenticated and a new authentication is required
+      value:
+        status: 401
+        code: UNAUTHENTICATED
+        message: Request not authenticated due to missing, invalid, or expired credentials. A new authentication is required.
+    GENERIC_403_PERMISSION_DENIED:
+      description: Permission denied. OAuth2 token access does not have the required scope or when the user fails operational security
+      value:
+        status: 403
+        code: PERMISSION_DENIED
+        message: Client does not have sufficient permissions to perform this action.
