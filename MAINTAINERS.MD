@@ -1,3 +1,4 @@
 | Org                    | Name                                      | GitHub Username        |
 | -----------------------| ------------------------------------------| -----------------------|
-| §company§ | §name§ | §github_username§ |
+| ChinaUincom | Niu Jincui | niu-chinauicom |
+| ChinaUincom | Xiao Dongrui | ChinaUnicomXiaoDongrui |
